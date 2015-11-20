@@ -9,7 +9,7 @@ exports.handler = function(event, context) {
   // Getting '_ball' label lists.
   var ball_tags = function(){
     if ((event.action == 'created' || event.action == 'opened') == false){
-      return null;
+      return [];
     }
     if (event.action == 'created' && 'issue' in event){
       return create_tags_from_message(event.comment.body); //add issue and pullreq comment.
@@ -37,8 +37,11 @@ exports.handler = function(event, context) {
   }
 
   // create tags from message.
-  var create_tags_from_message = function(){
+  var create_tags_from_message = function(message){
     var list = message.match(/@[a-z0-9_-]+/i);
+    if (list == null){
+      return [];
+    }
     return list.map(function(v){ return v.replace(/@/,'') + '_ball'});
   }
 
@@ -53,7 +56,7 @@ exports.handler = function(event, context) {
       return null
     }
     var list = url_util.parse(url).path.split('/');
-    return splitted_path[2] + '/' + splitted_path[3];
+    return list[2] + '/' + list[3];
   }
 
   var updateLabel = function(labels, number){
@@ -70,10 +73,12 @@ exports.handler = function(event, context) {
   var num = number();
   if (num == null){
     context.succeed('not updated.');
+    return null;
   }
   var tags = ball_tags();
   if (tags.length == 0){
     context.succeed('not updated.');
+    return null;
   }
   updateLabel(tags, num);
 }
