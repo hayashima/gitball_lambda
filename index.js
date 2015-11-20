@@ -1,6 +1,6 @@
 yaml = require('js-yaml');
 fs   = require('fs');
-url_util = require('url')
+url_util = require('url');
 
 var github = require('octonode');
 var setting = yaml.safeLoad(fs.readFileSync('github.yml'));
