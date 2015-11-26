@@ -38,7 +38,7 @@ exports.handler = function(event, context) {
 
   // create tags from message.
   var create_tags_from_message = function(message){
-    var list = message.match(/@[a-z0-9_-]+/i);
+    var list = message.match(/@[a-z0-9_-]+/ig);
     if (list == null){
       return [];
     }
@@ -59,15 +59,24 @@ exports.handler = function(event, context) {
     return list[2] + '/' + list[3];
   }
 
-  var updateLabel = function(labels, number){
+  var update = function(tags, num){
     var client = github.client(setting.token);
-    var ghissue = client.issue(repos(), number);
-    ghissue.update(
-      {'labels': labels},
-      function(){
-        context.succeed('complete!');
-      }
-    )
+    var ghissue = client.issue(repos(), num);
+    var obj = function(err, data){
+      var existing_labels = data.labels.map(function(v){return v.name});
+      existing_labels.forEach(function(v){
+        if (v.match(/_ball$/i) == null){
+          tags.push(v);
+        }
+      })
+      ghissue.update(
+        {'labels': tags},
+        function(){
+          context.succeed('complete!');
+        }
+      )
+    }
+    ghissue.info(obj);
   }
 
   var num = number();
@@ -80,5 +89,5 @@ exports.handler = function(event, context) {
     context.succeed('not updated.');
     return null;
   }
-  updateLabel(tags, num);
+  update(tags, num);
 }
