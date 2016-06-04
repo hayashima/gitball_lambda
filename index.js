@@ -8,7 +8,7 @@ var setting = yaml.safeLoad(fs.readFileSync('github.yml'));
 exports.handler = function(event, context) {
   // Getting '_ball' label lists.
   var ball_tags = function(){
-    if ((event.action == 'created' || event.action == 'opened') == false){
+    if ((event.action == 'created' || event.action == 'opened') === false){
       return [];
     }
     if (event.action == 'created' && 'issue' in event){
@@ -20,11 +20,11 @@ exports.handler = function(event, context) {
     } else {
       return [];
     }
-  }
+  };
 
   // Getting issue number
   var number = function(){
-    if ((event.action == 'created' || event.action == 'opened') == false){
+    if ((event.action == 'created' || event.action == 'opened') === false){
       return null;
     }
     if ('issue' in event){
@@ -34,16 +34,18 @@ exports.handler = function(event, context) {
     } else {
       return null;
     }
-  }
+  };
 
   // create tags from message.
   var create_tags_from_message = function(message){
     var list = message.match(/@[a-z0-9_-]+/ig);
-    if (list == null){
+    if (list === null){
       return [];
     }
-    return list.map(function(v){ return v.replace(/@/,'') + '_ball'});
-  }
+    return list.map(function(v){
+      return v.replace(/@/,'') + '_ball';
+    });
+  };
 
   var repos = function(){
     var url = null;
@@ -52,42 +54,42 @@ exports.handler = function(event, context) {
     } else if ('pull_request' in event){
       url = event.pull_request.url;
     }
-    if (url == null){
-      return null
+    if (url === null){
+      return null;
     }
     var list = url_util.parse(url).path.split('/');
     return list[2] + '/' + list[3];
-  }
+  };
 
   var update = function(tags, num){
     var client = github.client(setting.token);
     var ghissue = client.issue(repos(), num);
     var obj = function(err, data){
-      var existing_labels = data.labels.map(function(v){return v.name});
+      var existing_labels = data.labels.map(function(v){ return v.name; });
       existing_labels.forEach(function(v){
-        if (v.match(/_ball$/i) == null){
+        if (v.match(/_ball$/i) === null){
           tags.push(v);
         }
-      })
+      });
       ghissue.update(
         {'labels': tags},
         function(){
           context.succeed('complete!');
         }
-      )
-    }
+      );
+    };
     ghissue.info(obj);
-  }
+  };
 
   var num = number();
-  if (num == null){
+  if (num === null){
     context.succeed('not updated.');
     return null;
   }
   var tags = ball_tags();
-  if (tags.length == 0){
+  if (tags.length === 0){
     context.succeed('not updated.');
     return null;
   }
   update(tags, num);
-}
+};
